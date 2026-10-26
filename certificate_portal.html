@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Certificate desk</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;700&display=swap">
+<style>
+:root{--desk:#dfe3da;--sheet:#f6f7f2;--field:#ffffff;--ink:#1d2822;--muted:#5d6a62;--line:#b9c1b5;--seal:#b8322a;--seal-ink:#fff;--shadow:rgba(29,40,34,.38)}
+@media (prefers-color-scheme:dark){:root{--desk:#171c19;--sheet:#202722;--field:#2a322d;--ink:#e8ece3;--muted:#9aa89f;--line:#3b463f;--seal:#ff7a68;--seal-ink:#2a0d09;--shadow:rgba(0,0,0,.6)}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--desk);color:var(--ink);font:15px/1.5 "Hanken Grotesk","Segoe UI","Nirmala UI",system-ui,sans-serif}
+.app{display:grid;grid-template-columns:372px 1fr;min-height:100vh}
+@media (max-width:860px){.app{grid-template-columns:1fr}}
+aside{background:var(--sheet);border-right:1px solid var(--line);padding:26px 24px 40px}
+h1{font:700 2rem/1.05 Fraunces,Georgia,serif;margin:0 0 8px;letter-spacing:-.01em}
+.lede{margin:0 0 6px;color:var(--muted)}
+.sec{padding:20px 0;border-top:2px dashed var(--line)}
+.sec:first-of-type{margin-top:18px}
+h2{font:600 1.12rem/1.2 Fraunces,Georgia,serif;margin:0 0 10px;display:flex;align-items:center;gap:10px}
+.seal{flex:none;width:28px;height:28px;border-radius:50%;background:var(--seal);color:var(--seal-ink);display:grid;place-items:center;font:700 .95rem Fraunces,Georgia,serif;box-shadow:0 0 0 3px var(--sheet),0 0 0 4px var(--seal)}
+label{display:block;font-size:.82rem;color:var(--muted);margin:12px 0 4px}
+input[type=file]{display:none}
+select,input[type=number]{width:100%;padding:8px 9px;border:1px solid var(--line);border-radius:3px;background:var(--field);color:var(--ink);font:inherit}
+input[type=range]{width:100%;accent-color:var(--seal)}
+input[type=color]{width:100%;height:38px;padding:2px;border:1px solid var(--line);border-radius:3px;background:var(--field)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sl{display:grid;grid-template-columns:1fr 80px;gap:12px;align-items:center}
+button{font:inherit;font-weight:700;padding:9px 14px;border-radius:3px;border:2px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+button:hover:not(:disabled){background:var(--ink);color:var(--sheet)}
+button:disabled{opacity:.4;cursor:not-allowed}
+#go{width:100%;padding:14px;font:700 1.05rem Fraunces,Georgia,serif;background:var(--seal);color:var(--seal-ink);border-color:var(--seal);letter-spacing:.01em}
+#go:hover:not(:disabled){background:var(--ink);border-color:var(--ink);color:var(--sheet)}
+:focus-visible{outline:3px solid var(--seal);outline-offset:2px}
+.hint{font-size:.82rem;color:var(--muted);margin:6px 0 0}
+.warn{color:var(--seal)!important;font-weight:500}
+details{font-size:.84rem;color:var(--muted);margin-top:8px}
+details ul{padding-left:18px;margin:6px 0}
+progress{width:100%;height:12px;margin-top:12px;accent-color:var(--seal)}
+#msg{margin-top:8px;font-size:.9rem}
+#msg.err{color:var(--seal);font-weight:500}
+main{padding:22px 28px 40px;min-width:0}
+.rule{height:16px;margin:0 0 14px;border-bottom:1px solid var(--line);background:repeating-linear-gradient(90deg,var(--muted) 0 1px,transparent 1px 8px)}
+.stage{position:sticky;top:14px}
+#wrap{min-height:340px;display:grid;place-items:center;padding:28px;border:2px dashed transparent;border-radius:4px;background:radial-gradient(var(--line) 1px,transparent 1.2px) 0 0/18px 18px}
+#wrap.over{border-color:var(--seal)}
+canvas{touch-action:none;max-width:100%;height:auto;display:block;background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.1),0 22px 38px -20px var(--shadow)}
+#empty{text-align:center;max-width:320px}
+#empty p{margin:0 0 14px;font:600 1.5rem/1.2 Fraunces,Georgia,serif}
+#empty span{display:block;margin-top:12px;color:var(--muted);font-size:.85rem}
+.nav{display:flex;gap:10px;align-items:center;margin-top:12px}
+.nav span{flex:1;text-align:center;font-size:.9rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="app">
+<aside>
+  <h1>Certificate desk</h1>
+  <p class="lede">Drop in a blank certificate and a list of names. Get one file per person. Nothing leaves your computer.</p>
+
+  <div class="sec">
+    <h2><span class="seal">1</span>Certificate</h2>
+    <button id="pick" type="button">Choose image</button>
+    <input type="file" id="tpl" accept="image/png,image/jpeg,image/webp" aria-label="Certificate image">
+    <p class="hint">PNG or JPG with the name area left empty. You can also drop it onto the desk.</p>
+    <p class="hint" id="tplinfo"></p>
+    <details><summary>What makes a good template</summary>
+      <ul>
+        <li>No sample name, dotted line, or "Name:" text where the name will go.</li>
+        <li>A clear gap as wide as your longest name.</li>
+        <li>At least 2000 px wide. A4 landscape at 300 dpi is 3508 × 2480.</li>
+        <li>One flat PNG or JPG, not a PDF.</li>
+      </ul>
+    </details>
+  </div>
+
+  <div class="sec">
+    <h2><span class="seal">2</span>Names</h2>
+    <input type="file" id="data" accept=".csv,.xlsx,.xls" aria-label="Names file" style="display:block;width:100%">
+    <label for="col">Column with the names</label>
+    <select id="col" disabled></select>
+    <p class="hint" id="count">No file loaded.</p>
+    <p class="hint" id="fitinfo"></p>
+  </div>
+
+  <div class="sec">
+    <h2><span class="seal">3</span>Place the name</h2>
+    <p class="hint" style="margin-top:0">Drag the box on the certificate to move it, pull its edges to resize it, or use the sliders. Arrow keys nudge it too (Shift for bigger steps).</p>
+    <label for="bxr">Left edge (px)</label>
+    <div class="sl"><input type="range" id="bxr" min="0" max="1000" value="0"><input type="number" id="bx" step="1" min="0"></div>
+    <label for="byr">Top edge (px)</label>
+    <div class="sl"><input type="range" id="byr" min="0" max="1000" value="0"><input type="number" id="by" step="1" min="0"></div>
+    <label for="bwr">Box width (px)</label>
+    <div class="sl"><input type="range" id="bwr" min="1" max="1000" value="0"><input type="number" id="bw" step="1" min="1"></div>
+    <label for="bhr">Box height (px)</label>
+    <div class="sl"><input type="range" id="bhr" min="1" max="1000" value="0"><input type="number" id="bh" step="1" min="1"></div>
+    <div class="row" style="margin-top:14px">
+      <button type="button" id="cx">Center left-right</button>
+      <button type="button" id="cy">Center up-down</button>
+    </div>
+    <div class="row">
+      <div><label for="align">Horizontal align</label><select id="align"><option value="center">Center</option><option value="left">Left</option><option value="right">Right</option></select></div>
+      <div><label for="valign">Vertical align</label><select id="valign"><option value="middle">Middle</option><option value="top">Top</option><option value="bottom">Bottom</option></select></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2><span class="seal">4</span>Style the text</h2>
+    <label for="font">Font</label>
+    <select id="font">
+      <option>Georgia</option><option>Arial</option><option>Times New Roman</option>
+      <option>Verdana</option><option>Trebuchet MS</option><option>Brush Script MT</option>
+      <option>Nirmala UI</option><option>Noto Sans Devanagari</option><option>serif</option><option>sans-serif</option>
+    </select>
+    <div class="row">
+      <div><label for="size">Largest size</label><input type="range" id="size" min="1" max="15" step="0.1" value="6"></div>
+      <div><label for="case">Letter case</label><select id="case"><option value="title">Capitalize Each Word</option><option value="keep">Keep as in file</option><option value="upper">UPPERCASE</option></select></div>
+    </div>
+    <div class="row">
+      <div><label for="color">Color</label><input type="color" id="color" value="#1a1a1a"></div>
+      <div><label for="bold">Weight</label><select id="bold"><option value="">Regular</option><option value="bold ">Bold</option></select></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2><span class="seal">5</span>Print</h2>
+    <label for="fmt">File type</label>
+    <select id="fmt"><option value="pdf">PDF, one per person</option><option value="png">PNG image, one per person</option></select>
+    <p style="margin:14px 0 0"><button id="go" disabled>Generate all certificates</button></p>
+    <progress id="bar" value="0" max="1" hidden></progress>
+    <div id="msg" role="status"></div>
+  </div>
+</aside>
+
+<main>
+  <div class="stage">
+    <div class="rule" aria-hidden="true"></div>
+    <div id="wrap">
+      <div id="empty"><p>Drop your certificate here</p><button type="button" onclick="document.getElementById('pick').click()">Choose image</button><span>Then add your names and place the name box.</span></div>
+      <canvas id="cv" tabindex="0" aria-label="Certificate preview. Use arrow keys to move the name box." hidden></canvas>
+    </div>
+    <p class="hint" id="coord">Move the mouse over the certificate to see its x, y position.</p>
+    <div class="nav">
+      <button id="prev" disabled aria-label="Previous name">Previous</button>
+      <span id="who">Sample name</span>
+      <button id="next" disabled aria-label="Next name">Next</button>
+    </div>
+  </div>
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const cv = $('cv'), ctx = cv.getContext('2d');
+let img = null, rows = [], names = [], idx = 0, pos = {x: .5, y: .55};
+
+function msg(t, err){ const m=$('msg'); m.textContent=t; m.className=err?'err':''; }
+
+const box = {x: .2, y: .45, w: .6, h: .12};
+function fmtName(t){
+  t = String(t).replace(/\s+/g,' ').trim();
+  const m = $('case').value;
+  if(m === 'upper') return t.toUpperCase();
+  if(m === 'title') return t.toLowerCase().replace(/(^|[\s.\-'’])(\p{L})/gu, (a,b,c) => b + c.toUpperCase());
+  return t;
+}
+function fitSize(g, W, H, text){
+  const weight = $('bold').value, face = $('font').value;
+  let size = Math.min(W * $('size').value / 100, box.h * H), maxW = box.w * W;
+  g.font = `${weight}${size}px "${face}"`;
+  while(g.measureText(text).width > maxW && size > 8){ size -= 2; g.font = `${weight}${size}px "${face}"`; }
+  return size;
+}
+function drawOn(c, g, text, showBox){
+  const W = c.width, H = c.height, bx = box.x*W, by = box.y*H, bw = box.w*W, bh = box.h*H;
+  g.drawImage(img, 0, 0);
+  if(showBox){ g.save(); g.strokeStyle = '#0b8a8a'; g.lineWidth = Math.max(2, W/600);
+    g.setLineDash([W/150, W/150]); g.strokeRect(bx, by, bw, bh);
+    g.setLineDash([]); g.fillStyle = '#fff'; const hs = Math.max(8, W/110);
+    for(const [hx, hy] of [[bx,by],[bx+bw/2,by],[bx+bw,by],[bx,by+bh/2],[bx+bw,by+bh/2],[bx,by+bh],[bx+bw/2,by+bh],[bx+bw,by+bh]]){
+      g.fillRect(hx-hs/2, hy-hs/2, hs, hs); g.strokeRect(hx-hs/2, hy-hs/2, hs, hs); }
+    g.restore(); }
+  if(!text) return;
+  fitSize(g, W, H, text);
+  const al = $('align').value, va = $('valign').value;
+  g.fillStyle = $('color').value; g.textAlign = al; g.textBaseline = va;
+  const tx = al === 'left' ? bx : al === 'right' ? bx + bw : bx + bw/2;
+  const ty = va === 'top' ? by : va === 'bottom' ? by + bh : by + bh/2;
+  g.fillText(text, tx, ty);
+}
+function fitCheck(){
+  const el = $('fitinfo'); if(!img || !names.length){ el.textContent = ''; return; }
+  const W = cv.width, H = cv.height, top = fitSize(ctx, W, H, 'Hg');
+  let worst = names[0], ws = 1e9;
+  for(const n of names){ const s = fitSize(ctx, W, H, n); if(s < ws){ ws = s; worst = n; } }
+  const pct = Math.round(ws / top * 100);
+  el.className = 'hint' + (pct < 55 ? ' warn' : '');
+  el.textContent = pct < 55
+    ? `Longest name "${worst}" shrinks to ${pct}% of the normal size. Make the box wider or the space on the certificate bigger.`
+    : `All names fit. Longest is "${worst}" at ${pct}% of the normal size.`;
+}
+function syncFields(){
+  const W = cv.width, H = cv.height;
+  for(const [id, v, mx] of [['bx',box.x*W,W],['by',box.y*H,H],['bw',box.w*W,W],['bh',box.h*H,H]]){
+    for(const el of [$(id), $(id + 'r')]){
+      el.max = mx; if(document.activeElement !== el) el.value = Math.round(v); } }
+}
+function preview(){
+  if(!img) return;
+  syncFields();
+  drawOn(cv, ctx, names.length ? names[idx] : 'Sample Name', true);
+  fitCheck();
+  $('who').textContent = names.length ? `${idx+1} of ${names.length}: ${names[idx]}` : 'Sample name';
+}
+
+const loadTpl = f => {
+  if(f.type === 'application/pdf' || /\.pdf$/i.test(f.name)){
+    msg('This is a PDF. Export the certificate as PNG or JPG first (in Canva: Share, Download, PNG).', true); return; }
+  const rd = new FileReader();
+  rd.onerror = () => msg('The file could not be opened. Try choosing it again.', true);
+  rd.onload = () => {
+    const im = new Image();
+    im.onload = () => { img = im; cv.width = im.naturalWidth; cv.height = im.naturalHeight;
+      const ti = $('tplinfo'); ti.className = 'hint' + (im.naturalWidth < 1500 ? ' warn' : '');
+      ti.textContent = `${im.naturalWidth} × ${im.naturalHeight} px.` + (im.naturalWidth < 1500 ? ' Low resolution: text may look blurry in print. Use 2000 px or wider.' : ' Good size.');
+      cv.hidden = false; $('empty').hidden = true; msg(''); refresh(); preview(); };
+    im.onerror = () => msg(`"${f.name}" (${f.type || 'unknown type'}) could not be read as an image. Re-save it as a standard PNG or JPG and try again. HEIC, AVIF and SVG files are not supported.`, true);
+    im.src = rd.result;
+  };
+  rd.readAsDataURL(f);
+};
+$('tpl').onchange = e => { if(e.target.files[0]) loadTpl(e.target.files[0]); };
+const stage = $('wrap');
+['dragenter','dragover'].forEach(t => stage.addEventListener(t, e => { e.preventDefault(); stage.classList.add('over'); }));
+['dragleave','drop'].forEach(t => stage.addEventListener(t, e => { e.preventDefault(); stage.classList.remove('over'); }));
+stage.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if(f) loadTpl(f); });
+$('pick').onclick = () => $('tpl').click();
+
+function loadRows(r){
+  rows = r.filter(o => o && Object.keys(o).length);
+  const cols = Object.keys(rows[0] || {});
+  const sel = $('col'); sel.innerHTML = cols.map(c => `<option>${c.replace(/</g,'&lt;')}</option>`).join('');
+  const guess = cols.find(c => /name/i.test(c)); if(guess) sel.value = guess;
+  sel.disabled = !cols.length; pickCol();
+}
+function pickCol(){
+  const c = $('col').value;
+  names = rows.map(r => fmtName(r[c] ?? '')).filter(Boolean);
+  idx = 0;
+  $('count').textContent = names.length ? `${names.length} names found.` : 'No names found in this column.';
+  refresh(); preview();
+}
+$('col').onchange = pickCol;
+
+$('data').onchange = e => {
+  const f = e.target.files[0]; if(!f) return;
+  if(/\.(xlsx|xls)$/i.test(f.name)){
+    const rd = new FileReader();
+    rd.onload = ev => { const wb = XLSX.read(ev.target.result, {type:'array'});
+      loadRows(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:''})); };
+    rd.readAsArrayBuffer(f);
+  } else {
+    Papa.parse(f, {header:true, skipEmptyLines:true, complete: r => loadRows(r.data)});
+  }
+};
+
+function refresh(){
+  $('go').disabled = !(img && names.length);
+  $('prev').disabled = $('next').disabled = !(img && names.length > 1);
+}
+$('prev').onclick = () => { idx = (idx - 1 + names.length) % names.length; preview(); };
+$('next').onclick = () => { idx = (idx + 1) % names.length; preview(); };
+['font','size','align','valign','color','bold'].forEach(id => $(id).oninput = preview);
+$('case').oninput = () => rows.length ? pickCol() : preview();
+
+let mode = null, start = null, orig = null;
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const pt = e => { const r = cv.getBoundingClientRect();
+  return {x: clamp((e.clientX - r.left) / r.width, 0, 1), y: clamp((e.clientY - r.top) / r.height, 0, 1)}; };
+function hit(p){
+  const r = cv.getBoundingClientRect(), tx = 12 / r.width, ty = 12 / r.height;
+  const inX = p.x > box.x - tx && p.x < box.x + box.w + tx, inY = p.y > box.y - ty && p.y < box.y + box.h + ty;
+  const L = Math.abs(p.x - box.x) < tx && inY, R = Math.abs(p.x - box.x - box.w) < tx && inY;
+  const T = Math.abs(p.y - box.y) < ty && inX, B = Math.abs(p.y - box.y - box.h) < ty && inX;
+  const m = (T ? 'n' : B ? 's' : '') + (L ? 'w' : R ? 'e' : '');
+  if(m) return m;
+  return (p.x > box.x && p.x < box.x + box.w && p.y > box.y && p.y < box.y + box.h) ? 'move' : 'new';
+}
+const cursors = {n:'ns-resize', s:'ns-resize', e:'ew-resize', w:'ew-resize', ne:'nesw-resize', sw:'nesw-resize', nw:'nwse-resize', se:'nwse-resize', move:'move', new:'crosshair'};
+cv.onpointerdown = e => { cv.focus(); start = pt(e); mode = hit(start); orig = {...box}; cv.setPointerCapture(e.pointerId); };
+cv.onpointermove = e => {
+  const p = pt(e);
+  if(!mode){ cv.style.cursor = cursors[hit(p)]; return; }
+  const dx = p.x - start.x, dy = p.y - start.y;
+  if(mode === 'new'){
+    const w = Math.abs(dx), h = Math.abs(dy);
+    if(w > .03 && h > .015){ box.x = Math.min(p.x, start.x); box.y = Math.min(p.y, start.y); box.w = w; box.h = h; }
+  } else if(mode === 'move'){
+    box.x = clamp(orig.x + dx, 0, 1 - orig.w); box.y = clamp(orig.y + dy, 0, 1 - orig.h);
+  } else {
+    let l = orig.x, r = orig.x + orig.w, t = orig.y, b = orig.y + orig.h;
+    if(mode.includes('w')) l = clamp(orig.x + dx, 0, r - .02);
+    if(mode.includes('e')) r = clamp(r + dx, l + .02, 1);
+    if(mode.includes('n')) t = clamp(orig.y + dy, 0, b - .01);
+    if(mode.includes('s')) b = clamp(b + dy, t + .01, 1);
+    box.x = l; box.y = t; box.w = r - l; box.h = b - t;
+  }
+  preview();
+};
+cv.onpointerup = () => { mode = null; };
+cv.onkeydown = e => {
+  const k = {ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1]}[e.key]; if(!k) return;
+  e.preventDefault(); const st = e.shiftKey ? .01 : .002;
+  box.x = clamp(box.x + k[0]*st, 0, 1 - box.w); box.y = clamp(box.y + k[1]*st, 0, 1 - box.h); preview();
+};
+for(const [id, key, lo, dim] of [['bx','x',0,'w'],['by','y',0,'h'],['bw','w',.01,'w'],['bh','h',.005,'h']]){
+  const h = e => { if(!img) return; const v = parseFloat(e.target.value); if(isNaN(v)) return;
+    box[key] = clamp(v / (dim === 'w' ? cv.width : cv.height), lo, 1);
+    box.w = Math.min(box.w, 1 - box.x); box.h = Math.min(box.h, 1 - box.y); preview(); };
+  $(id).oninput = h; $(id + 'r').oninput = h;
+}
+$('cx').onclick = () => { box.x = (1 - box.w) / 2; preview(); };
+$('cy').onclick = () => { box.y = (1 - box.h) / 2; preview(); };
+const showCoord = e => { if(!img) return; const p = pt(e);
+  $('coord').textContent = `Mouse position: x ${Math.round(p.x * cv.width)}, y ${Math.round(p.y * cv.height)} px (image is ${cv.width} × ${cv.height} px)`; };
+cv.addEventListener('pointermove', showCoord);
+
+const safe = s => s.replace(/[\\/:*?"<>|]+/g,'_').trim() || 'certificate';
+
+$('go').onclick = async () => {
+  const fmt = $('fmt').value, W = img.naturalWidth, H = img.naturalHeight;
+  const off = document.createElement('canvas'); off.width = W; off.height = H;
+  const g = off.getContext('2d'), zip = new JSZip(), used = {};
+  const bar = $('bar'); bar.hidden = false; bar.max = names.length; bar.value = 0;
+  $('go').disabled = true; msg('Working...');
+  try{
+    for(let i = 0; i < names.length; i++){
+      drawOn(off, g, names[i], false);
+      let base = safe(names[i]); used[base] = (used[base] || 0) + 1;
+      if(used[base] > 1) base += '_' + used[base];
+      if(fmt === 'png'){
+        const blob = await new Promise(r => off.toBlob(r, 'image/png'));
+        zip.file(base + '.png', blob);
+      } else {
+        const pdf = new jspdf.jsPDF({orientation: W >= H ? 'l' : 'p', unit: 'px', format: [W, H], hotfixes: ['px_scaling']});
+        pdf.addImage(off.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, W, H);
+        zip.file(base + '.pdf', pdf.output('arraybuffer'));
+      }
+      bar.value = i + 1;
+      if(i % 5 === 0) await new Promise(r => setTimeout(r));
+    }
+    msg('Packing the ZIP...');
+    const out = await zip.generateAsync({type: 'blob'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(out); a.download = 'certificates.zip';
+    document.body.appendChild(a); a.click(); a.remove();
+    msg(`Done. ${names.length} certificates saved in certificates.zip.`);
+  }catch(err){ msg('Something went wrong: ' + err.message, true); }
+  $('go').disabled = false;
+};
+</script>
+</body>
+</html>
